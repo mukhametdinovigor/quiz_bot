@@ -3,6 +3,7 @@ import re
 
 from environs import Env
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 
 env = Env()
@@ -10,7 +11,14 @@ env.read_env()
 
 
 def start(update, context):
-    update.message.reply_text('Hi!')
+    user = update.message.from_user.username
+    reply_keyboard = [['Новый вопрос', 'Сдаться'], ['Мой счёт']]
+    update.message.reply_text(
+        text=f"Привет {user}!",
+        reply_markup=ReplyKeyboardMarkup(
+            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+        ),
+    )
 
 
 def echo(update, context):
