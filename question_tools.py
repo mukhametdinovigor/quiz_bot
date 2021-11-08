@@ -21,4 +21,3 @@ def get_random_questions():
     random_question, random_answer = random.choice(list(questions.items()))
     random_question = random_question.replace('\n', ' ').strip()
     return random_question, random_answer
-
