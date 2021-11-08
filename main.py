@@ -8,8 +8,7 @@ from question_tools import get_random_questions
 env = Env()
 env.read_env()
 
-THING, NEW_QUESTION, ATTEMPT, COUNT = range(4)
-
+NEW_QUESTION, ATTEMPT, COUNT = range(3)
 
 REDIS_DB = redis.Redis(
     host=env.str('REDIS_ENDPOINT'),
@@ -47,8 +46,17 @@ def handle_solution_attempt(update, context):
     right_answer = answer.replace('.', '*').replace('(', '*').split('*')[0].strip()
     print(right_answer)
     if update.message.text == right_answer:
-        update.message.reply_text('Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»')
+        update.message.reply_text('Правильно! Поздравляю! Для следующего вопроса нажми - «Новый вопрос»')
         return NEW_QUESTION
+    update.message.reply_text('Неверный ответ. Вы можете попробовать ещё раз')
+
+
+def handle_give_up(update, context):
+    question_for_check = REDIS_DB.get(update.message.chat_id)
+    answer = REDIS_DB.get(question_for_check)
+    right_answer = answer.replace('.', '*').replace('(', '*').split('*')[0].strip()
+    update.message.reply_text(f'Правильный ответ - {right_answer}\nДля продолжения нажми - «Новый вопрос»')
+    return NEW_QUESTION
 
 
 def send_count(update, context):
@@ -65,7 +73,10 @@ def main():
         states={
             NEW_QUESTION: [MessageHandler(Filters.regex('^(Новый вопрос)$'), handle_new_question_request)],
             COUNT: [MessageHandler(Filters.regex('^(Мой счёт)$'), send_count)],
-            ATTEMPT: [MessageHandler(Filters.text, handle_solution_attempt)],
+            ATTEMPT: [
+                MessageHandler(Filters.text('Сдаться'), handle_give_up),
+                MessageHandler(Filters.text, handle_solution_attempt)],
+
         },
         fallbacks=[],
     )
