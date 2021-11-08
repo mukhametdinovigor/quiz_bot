@@ -1,4 +1,5 @@
 import os
+import random
 import re
 
 
@@ -13,3 +14,11 @@ def get_questions(question_folder='questions'):
                 question, answer = re.split(r'Ответ:', question_answer)
                 questions[question.strip()] = answer.strip().split('\n')[0]
     return questions
+
+
+def get_random_questions():
+    questions = get_questions()
+    random_question, random_answer = random.choice(list(questions.items()))
+    random_question = random_question.replace('\n', ' ').strip()
+    return random_question, random_answer
+

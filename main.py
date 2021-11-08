@@ -2,7 +2,7 @@ from environs import Env
 from telegram.ext import CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from get_questions import get_questions
+from question_tools import get_random_questions
 
 env = Env()
 env.read_env()
@@ -23,19 +23,15 @@ def start(update, context):
 
 
 def send_question(update, context):
-    update.message.reply_text('question')
+    random_question, random_answer = get_random_questions()
+    update.message.reply_text(random_question)
 
 
 def send_count(update, context):
     update.message.reply_text('count')
 
 
-
-
-
 def main():
-    questions = get_questions()
-
     updater = Updater(env.str("TG_TOKEN"))
     dp = updater.dispatcher
 
