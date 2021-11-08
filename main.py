@@ -1,13 +1,13 @@
-import os
-import re
-
 from environs import Env
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
+from get_questions import get_questions
 
 env = Env()
 env.read_env()
+
+THING, CHOOSING = range(2)
 
 
 def start(update, context):
@@ -16,26 +16,21 @@ def start(update, context):
     update.message.reply_text(
         text=f"Привет {user}!",
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, resize_keyboard=True
+            reply_keyboard, resize_keyboard=True
         ),
     )
+    return CHOOSING
 
 
-def echo(update, context):
-    update.message.reply_text(update.message.text)
+def send_question(update, context):
+    update.message.reply_text('question')
 
 
-def get_questions(question_folder='questions'):
-    questions = dict()
-    question_files = os.listdir(question_folder)
-    for question_file in question_files:
-        with open(f"{question_folder}/{question_file}", "r", encoding='KOI8-R') as file:
-            question_file_contents = file.read()
-            questions_answers = re.split(r'Вопрос+[a-zA-Z0-9 ]+:', question_file_contents)[1:]
-            for question_answer in questions_answers:
-                question, answer = re.split(r'Ответ:', question_answer)
-                questions[question.strip()] = answer.strip().split('\n')[0]
-    return questions
+def send_count(update, context):
+    update.message.reply_text('count')
+
+
+
 
 
 def main():
@@ -44,9 +39,25 @@ def main():
     updater = Updater(env.str("TG_TOKEN"))
     dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text, echo))
-
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler('start', start)],
+        allow_reentry=True,
+        states={
+            CHOOSING:
+                [
+                    MessageHandler(
+                        Filters.regex('^(Новый вопрос)$'),
+                        send_question
+                    ),
+                    MessageHandler(
+                        Filters.regex('^(Мой счёт)$'),
+                        send_count
+                    )
+                ],
+        },
+        fallbacks=[],
+    )
+    dp.add_handler(conv_handler)
     updater.start_polling()
     updater.idle()
 
