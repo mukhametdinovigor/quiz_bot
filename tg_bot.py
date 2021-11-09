@@ -9,13 +9,13 @@ env.read_env()
 
 NEW_QUESTION, ATTEMPT, COUNT = range(3)
 
-REDIS_DB = redis.Redis(
-    host=env.str('REDIS_ENDPOINT'),
-    port=env.str('REDIS_PORT'),
-    db=0,
-    password=env.str('REDIS_PASSWORD'),
-    decode_responses=True
-)
+# REDIS_DB = redis.Redis(
+#     host=env.str('REDIS_ENDPOINT'),
+#     port=env.str('REDIS_PORT'),
+#     db=0,
+#     password=env.str('REDIS_PASSWORD'),
+#     decode_responses=True
+# )
 
 
 def start(update, context):
@@ -31,26 +31,35 @@ def start(update, context):
 
 
 def handle_new_question_request(update, context):
+    redis_db = redis.Redis(
+        host=env.str('REDIS_ENDPOINT'),
+        port=env.str('REDIS_PORT'),
+        db=0,
+        password=env.str('REDIS_PASSWORD'),
+        decode_responses=True
+    )
+    context.user_data['redis_db'] = redis_db
     random_question, random_answer = get_random_questions()
-    REDIS_DB.set(update.message.chat_id, random_question)
-    REDIS_DB.set(random_question, random_answer)
+    print(random_answer)
+    redis_db.set(f'tg-{update.message.chat_id}', random_question)
+    redis_db.set(random_question, random_answer)
     update.message.reply_text(random_question)
     return ATTEMPT
 
 
 def handle_solution_attempt(update, context):
-    question_for_check = REDIS_DB.get(update.message.chat_id)
-    answer = REDIS_DB.get(question_for_check)
+    question_for_check = context.user_data['redis_db'].get(f'tg-{update.message.chat_id}')
+    answer = context.user_data['redis_db'].get(question_for_check)
     right_answer = answer.lower().replace('.', '*').replace('(', '*').split('*')[0].strip()
-    if update.message.text == right_answer:
+    if update.message.text.lower() == right_answer:
         update.message.reply_text('Правильно! Поздравляю! Для следующего вопроса нажми - «Новый вопрос»')
         return NEW_QUESTION
     update.message.reply_text('Неверный ответ. Вы можете попробовать ещё раз')
 
 
 def handle_give_up(update, context):
-    question_for_check = REDIS_DB.get(update.message.chat_id)
-    answer = REDIS_DB.get(question_for_check)
+    question_for_check = context.user_data['redis_db'].get(f'tg-{update.message.chat_id}')
+    answer = context.user_data['redis_db'].get(question_for_check)
     right_answer = answer.lower().replace('.', '*').replace('(', '*').split('*')[0].strip()
     update.message.reply_text(f'Правильный ответ - {right_answer}\nДля продолжения нажми - «Новый вопрос»')
     return NEW_QUESTION
