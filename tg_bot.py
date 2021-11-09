@@ -1,21 +1,18 @@
+import logging
+
 from environs import Env
 import redis
 from telegram.ext import CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
 from telegram import ReplyKeyboardMarkup
-from quiz_questions import get_random_questions
 
+from quiz_questions import get_random_questions
+from tg_logs_handler import TelegramLogsHandler
+
+logger = logging.getLogger('Logger')
 env = Env()
 env.read_env()
 
 NEW_QUESTION, ATTEMPT, COUNT = range(3)
-
-# REDIS_DB = redis.Redis(
-#     host=env.str('REDIS_ENDPOINT'),
-#     port=env.str('REDIS_PORT'),
-#     db=0,
-#     password=env.str('REDIS_PASSWORD'),
-#     decode_responses=True
-# )
 
 
 def start(update, context):
@@ -40,7 +37,6 @@ def handle_new_question_request(update, context):
     )
     context.user_data['redis_db'] = redis_db
     random_question, random_answer = get_random_questions()
-    print(random_answer)
     redis_db.set(f'tg-{update.message.chat_id}', random_question)
     redis_db.set(random_question, random_answer)
     update.message.reply_text(random_question)
@@ -66,7 +62,12 @@ def handle_give_up(update, context):
 
 
 def main():
+    chat_id = env.str('CHAT_ID')
     updater = Updater(env.str("TG_TOKEN"))
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(TelegramLogsHandler(chat_id))
+    logger.warning('TG_Quiz_Bot запущен.')
+
     dp = updater.dispatcher
 
     conv_handler = ConversationHandler(

@@ -1,3 +1,4 @@
+import logging
 import random
 
 from environs import Env
@@ -7,7 +8,9 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
 
 from quiz_questions import get_random_questions
+from tg_logs_handler import TelegramLogsHandler
 
+logger = logging.getLogger('Logger')
 env = Env()
 env.read_env()
 
@@ -39,7 +42,7 @@ def start(event, vk_api, keyboard, redis_db):
         message = random_question
         send_message(event, vk_api, message, keyboard)
 
-    elif event.message == right_answer:
+    elif event.message.lower() == right_answer:
         message = 'Правильно! Поздравляю! Для следующего вопроса нажми - «Новый вопрос»'
         send_message(event, vk_api, message, keyboard)
 
@@ -62,6 +65,10 @@ def send_message(event, vk_api, message, keyboard):
 
 
 def main():
+    chat_id = env.str('CHAT_ID')
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(TelegramLogsHandler(chat_id))
+    logger.warning('VK_Quiz_Bot запущен.')
     redis_db = redis.Redis(
         host=env.str('REDIS_ENDPOINT'),
         port=env.str('REDIS_PORT'),
