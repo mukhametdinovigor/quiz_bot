@@ -4,7 +4,7 @@
 
 Пообщаться с ботом можно:
 
-- в Телеграм [@VerbGamesBot](t.me/Tg_Quiz_Mif_Bot)
+- в Телеграм [@VerbGamesBot](https://t.me/Tg_Quiz_Mif_Bot)
 - Вконтакте в группе [Verb_Games](https://vk.com/public208694766) кликнуть на `Написать сообщение`
 
 Также пример работы ботов можно посмотреть на гифке
