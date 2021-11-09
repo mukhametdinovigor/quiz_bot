@@ -2,7 +2,7 @@ from environs import Env
 import redis
 from telegram.ext import CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
 from telegram import ReplyKeyboardMarkup
-from question_tools import get_random_questions
+from quiz_questions import get_random_questions
 
 env = Env()
 env.read_env()
