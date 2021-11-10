@@ -28,14 +28,7 @@ def start(update, context):
 
 
 def handle_new_question_request(update, context):
-    redis_db = redis.Redis(
-        host=env.str('REDIS_ENDPOINT'),
-        port=env.str('REDIS_PORT'),
-        db=0,
-        password=env.str('REDIS_PASSWORD'),
-        decode_responses=True
-    )
-    context.user_data['redis_db'] = redis_db
+    redis_db = context.bot_data['redis_db']
     random_question, random_answer = get_random_question()
     redis_db.set(f'tg-{update.message.chat_id}', random_question)
     redis_db.set(random_question, random_answer)
@@ -44,8 +37,8 @@ def handle_new_question_request(update, context):
 
 
 def handle_solution_attempt(update, context):
-    question_for_check = context.user_data['redis_db'].get(f'tg-{update.message.chat_id}')
-    answer = context.user_data['redis_db'].get(question_for_check)
+    question_for_check = context.bot_data['redis_db'].get(f'tg-{update.message.chat_id}')
+    answer = context.bot_data['redis_db'].get(question_for_check)
     right_answer = answer.lower().replace('.', '*').replace('(', '*').split('*')[0].strip()
     if update.message.text.lower() == right_answer:
         update.message.reply_text('Правильно! Поздравляю! Для следующего вопроса нажми - «Новый вопрос»')
@@ -54,8 +47,8 @@ def handle_solution_attempt(update, context):
 
 
 def handle_give_up(update, context):
-    question_for_check = context.user_data['redis_db'].get(f'tg-{update.message.chat_id}')
-    answer = context.user_data['redis_db'].get(question_for_check)
+    question_for_check = context.bot_data['redis_db'].get(f'tg-{update.message.chat_id}')
+    answer = context.bot_data['redis_db'].get(question_for_check)
     right_answer = answer.lower().replace('.', '*').replace('(', '*').split('*')[0].strip()
     update.message.reply_text(f'Правильный ответ - {right_answer}\nДля продолжения нажми - «Новый вопрос»')
     return NEW_QUESTION
@@ -69,7 +62,13 @@ def main():
     logger.warning('TG_Quiz_Bot запущен.')
 
     dp = updater.dispatcher
-
+    dp.bot_data['redis_db'] = redis.Redis(
+                                    host=env.str('REDIS_ENDPOINT'),
+                                    port=env.str('REDIS_PORT'),
+                                    db=0,
+                                    password=env.str('REDIS_PASSWORD'),
+                                    decode_responses=True
+                                )
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         allow_reentry=True,
