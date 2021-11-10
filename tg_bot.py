@@ -5,7 +5,7 @@ import redis
 from telegram.ext import CommandHandler, ConversationHandler, Filters, MessageHandler, Updater
 from telegram import ReplyKeyboardMarkup
 
-from quiz_questions import get_random_questions
+from quiz_questions import get_random_question
 from tg_logs_handler import TelegramLogsHandler
 
 logger = logging.getLogger('Logger')
@@ -36,7 +36,7 @@ def handle_new_question_request(update, context):
         decode_responses=True
     )
     context.user_data['redis_db'] = redis_db
-    random_question, random_answer = get_random_questions()
+    random_question, random_answer = get_random_question()
     redis_db.set(f'tg-{update.message.chat_id}', random_question)
     redis_db.set(random_question, random_answer)
     update.message.reply_text(random_question)

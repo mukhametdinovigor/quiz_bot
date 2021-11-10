@@ -16,7 +16,7 @@ def get_questions(question_folder='questions'):
     return questions
 
 
-def get_random_questions():
+def get_random_question():
     questions = get_questions()
     random_question, random_answer = random.choice(list(questions.items()))
     random_question = random_question.replace('\n', ' ').strip()

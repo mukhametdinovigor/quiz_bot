@@ -7,7 +7,7 @@ import vk_api as vk
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
 
-from quiz_questions import get_random_questions
+from quiz_questions import get_random_question
 from tg_logs_handler import TelegramLogsHandler
 
 logger = logging.getLogger('Logger')
@@ -36,7 +36,7 @@ def start(event, vk_api, keyboard, redis_db):
         send_message(event, vk_api, message, keyboard)
 
     elif event.message == 'Новый вопрос':
-        random_question, random_answer = get_random_questions()
+        random_question, random_answer = get_random_question()
         redis_db.set(f'vk-{event.user_id}', random_question)
         redis_db.set(random_question, random_answer)
         message = random_question
