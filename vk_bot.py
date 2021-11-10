@@ -24,10 +24,9 @@ def create_keyboard():
     return keyboard
 
 
-def start(event, vk_api, keyboard, redis_db):
-    question_answer = redis_db.get(f'vk-{event.user_id}')
-    if question_answer:
-        right_answer = redis_db.get(question_answer)
+def handle_bot(event, vk_api, keyboard, redis_db):
+    right_answer = redis_db.get(f'vk-{event.user_id}')
+    if right_answer:
         right_answer = right_answer.lower().replace('.', '*').replace('(', '*').split('*')[0].strip()
 
     if event.message_id == 1 or event.message.lower() == 'привет':
@@ -37,10 +36,8 @@ def start(event, vk_api, keyboard, redis_db):
 
     elif event.message == 'Новый вопрос':
         random_question, random_answer = get_random_question()
-        redis_db.set(f'vk-{event.user_id}', random_question)
-        redis_db.set(random_question, random_answer)
-        message = random_question
-        send_message(event, vk_api, message, keyboard)
+        redis_db.set(f'vk-{event.user_id}', random_answer)
+        send_message(event, vk_api, random_question, keyboard)
 
     elif event.message.lower() == right_answer:
         message = 'Правильно! Поздравляю! Для следующего вопроса нажми - «Новый вопрос»'
@@ -83,7 +80,7 @@ def main():
 
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            start(event, vk_api, keyboard, redis_db)
+            handle_bot(event, vk_api, keyboard, redis_db)
 
 
 if __name__ == "__main__":
