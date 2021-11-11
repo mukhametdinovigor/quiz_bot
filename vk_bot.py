@@ -24,7 +24,7 @@ def create_keyboard():
     return keyboard
 
 
-def handle_bot(event, vk_api, keyboard, redis_db):
+def handle_user_input(event, vk_api, keyboard, redis_db):
     right_answer = redis_db.get(f'vk-{event.user_id}')
     if right_answer:
         right_answer = right_answer.lower().replace('.', '*').replace('(', '*').split('*')[0].strip()
